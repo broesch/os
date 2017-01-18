@@ -245,23 +245,56 @@ func RunInit() error {
 				return cfg, nil
 			}
 
-			devices := []string{"/dev/sda", "/dev/vda"}
-			data := make([]byte, len(BOOT2DOCKER_MAGIC))
+			vmware := true
 
-			for _, device := range devices {
-				f, err := os.Open(device)
-				if err == nil {
-					defer f.Close()
+			if !vmware {
+				devices := []string{"/dev/sda", "/dev/vda"}
+				data := make([]byte, len(BOOT2DOCKER_MAGIC))
 
-					_, err = f.Read(data)
-					if err == nil && string(data) == BOOT2DOCKER_MAGIC {
-						boot2DockerEnvironment = true
-						cfg.Rancher.State.Dev = "LABEL=B2D_STATE"
-						cfg.Rancher.State.Autoformat = []string{device}
-						break
+				for _, device := range devices {
+					f, err := os.Open(device)
+					if err == nil {
+						defer f.Close()
+
+						_, err = f.Read(data)
+						if err == nil && string(data) == BOOT2DOCKER_MAGIC {
+							boot2DockerEnvironment = true
+							cfg.Rancher.State.Dev = "LABEL=B2D_STATE"
+							cfg.Rancher.State.Autoformat = []string{device}
+							break
+						}
 					}
 				}
+			} else {
+				boot2DockerEnvironment = true
+				cfg.Rancher.State.Dev = "LABEL=RANCHER_STATE"
+				cfg.Rancher.State.Autoformat = []string{"/dev/sda"}
 			}
+
+			// 
+			// devices := []string{"/dev/sda", "/dev/vda"}
+			// data := make([]byte, len(BOOT2DOCKER_MAGIC))
+			//
+			// for _, device := range devices {
+			// 	f, err := os.Open(device)
+			// 	if err == nil {
+			// 		defer f.Close()
+			//
+			// 		_, err = f.Read(data)
+			// 		if err == nil && string(data) == BOOT2DOCKER_MAGIC {
+			// 			boot2DockerEnvironment = true
+			// 			cfg.Rancher.State.Dev = "LABEL=B2D_STATE"
+			// 			cfg.Rancher.State.Autoformat = []string{device}
+			// 			break
+			// 		}
+			// 	} else if vmware {
+			// 		boot2DockerEnvironment = true
+			// 		cfg.Rancher.State.Dev = "LABEL=RANCHER_STATE"
+			// 		cfg.Rancher.State.Autoformat = []string{"/dev/sda"}
+			// 		break;
+			// 	}
+			// }
+
 
 			return cfg, nil
 		},
